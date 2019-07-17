@@ -1,12 +1,19 @@
 /**
- * @file   testebbchar.c
- * @author Derek Molloy
- * @date   7 April 2015
- * @version 0.1
- * @brief  A Linux user space program that communicates with the ebbchar.c LKM. It passes a
- * string to the LKM and reads the response from the LKM. For this example to work the device
- * must be called /dev/ebbchar.
- * @see http://www.derekmolloy.ie/ for a full description and follow-up descriptions.
+**********************************************************************
+  Copyright (C) 2019 Aniruddha Kanhere
+ 
+  This program is free software; you can redistribute it and/or modify
+  it under the terms of the GNU General Public License as published by
+  the Free Software Foundation.
+**********************************************************************
+
+ * @file   testSPI.c
+ * @author Aniruddha Kanhere
+ * @date   17 July 2019
+ * @version 1
+ * @brief  A Linux user space program that communicates with the SPI LKM. It passes a
+ * string to the LKM which is sent using the SPI protocol. For this test to work the device
+ * must be called /dev/SPI. 
 */
 #include<stdio.h>
 #include<stdlib.h>
@@ -35,18 +42,7 @@ int main(){
       perror("Failed to write the message to the device.");
       return errno;
    }
-
-   printf("Press ENTER to read back from the device...\n");
-   getchar();
-
-   printf("Reading from the device...\n");
-   ret = read(fd, receive, BUFFER_LENGTH);        // Read the response from the LKM
-   if (ret < 0){
-      perror("Failed to read the message from the device.");
-      return errno;
-   }
-   printf("The received message is: [%s]\n", receive);
-   printf("End of the program\n");
+   
    close(fd);
    return 0;
 }
