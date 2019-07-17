@@ -13,7 +13,7 @@
  * @version 1
  * @brief  A Linux user space program that communicates with the SPI LKM. It passes a
  * string to the LKM which is sent using the SPI protocol. For this test to work the device
- * must be called /dev/SPI. 
+ * must be called /dev/MCSPI. 
 */
 #include<stdio.h>
 #include<stdlib.h>
