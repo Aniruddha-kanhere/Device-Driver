@@ -1,12 +1,4 @@
 /*
-**********************************************************************
-  Copyright (C) 2019 Aniruddha Kanhere
- 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation.
-**********************************************************************
-
 * @file    MCSPI_misc.c
 * @author  Aniruddha Kanhere
 * @date    13 July 2019
@@ -16,6 +8,7 @@
 */
 
 #include "MCSPI_misc.h"
+#include <stdarg.h>
 
 MODULE_LICENSE      ("GPL v2");                           ///< The license type -- this affects available functionality
 MODULE_AUTHOR       ("Aniruddha Kanhere");              ///< The author -- visible when you use modinfo
@@ -27,53 +20,63 @@ int MCSPI_send_data_poll(struct MCSPI *dev, char* msg, int len)
 {
   struct MCSPI_data data_var;
   struct MCSPI_data *mcspi_data = &data_var;
+  long int timeout = ( ((u32)(dev->clock_div+1)) * 2 * 1000 * (dev->word_length+1) )/48000000;
+  //clock_dividor * factor_of_safety * convertsion_to_ms * number_of_bits /Clock_speed
 
-  int bytes = 0;
+  int bytes;
   void __iomem *channel_stat = NULL;
+  u32 channel_tx = 0, channel_rx = 0;
 
   mcspi_data->device = dev;
+
+  if(timeout == 0)
+    timeout = 1;
 
   switch(dev->channel_number)
   {
     default:
-    case 0: channel_stat = dev->base_addr + MCSPI_CH0STAT;   break;
-    case 1: channel_stat = dev->base_addr + MCSPI_CH1STAT;   break;
-    case 2: channel_stat = dev->base_addr + MCSPI_CH2STAT;   break;
-    case 3: channel_stat = dev->base_addr + MCSPI_CH3STAT;   break;
+    case 0: channel_stat = dev->base_addr + MCSPI_CH0STAT;
+            channel_tx = MCSPI_TX0;
+            channel_rx = MCSPI_RX0;
+            break;
+    case 1: channel_stat = dev->base_addr + MCSPI_CH1STAT;
+            channel_tx = MCSPI_TX1;
+            channel_rx = MCSPI_RX1;
+            break;
+    case 2: channel_stat = dev->base_addr + MCSPI_CH2STAT;
+            channel_tx = MCSPI_TX2;
+            channel_rx = MCSPI_RX2;
+            break;
+    case 3: channel_stat = dev->base_addr + MCSPI_CH3STAT;
+            channel_tx = MCSPI_TX3;
+            channel_rx = MCSPI_RX3;
+            break;
   }
 
-  pr_info("%s: Send: sending %d characters\n", DRIVER_NAME, len);
+  DEBUG_NORM("%s: Send: sending %d characters\n", DRIVER_NAME, len);
 
-  for( ; bytes < len ; bytes++)
+  for(bytes = 0 ; bytes < len ; bytes++)
   {
-    //c = (u8)MCSPI_read_reg(dev->base_addr, MCSPI_RX0);
-    MCSPI_write_reg(dev->base_addr, MCSPI_TX0, (u32)msg[bytes]);
+    MCSPI_write_reg(dev->base_addr, channel_tx, (u32)msg[bytes]);
     mb();
-    //msg[bytes] = c;
-    pr_info("Send: sent %c -- \n\n", msg[bytes]);
+
+    DEBUG_NORM("Send: sent %c -- \n\n", msg[bytes]);
+
+    if(MCSPI_wait_for_bit_set(channel_stat, MCSPI_CHSTAT_TXS_MASK, timeout) < 0)
+      return -ETIME;
 
 
-    //mbw();
-
-
-
-    //while(i--);
-    //i = 30000;
-
-    /*if(MCSPI_wait_for_bit_reset(channel_conf, MCSPI_CHSTAT_TXS_MASK, 200) < 0)
+    if(dev->tx_rx == MCSPI_CHCONF_TRM_RX || dev->tx_rx == MCSPI_CHCONF_TRM_TX_RX)
     {
-      pr_alert("%s: send: not even resetting\n", DRIVER_NAME);
-      return -1;
-    }*/
+      if(MCSPI_wait_for_bit_set(channel_stat, MCSPI_CHSTAT_RXS_MASK, timeout) < 0)
+        return -ETIME;
 
-    if(MCSPI_wait_for_bit_set(channel_stat, MCSPI_CHSTAT_TXS_MASK, 1000) < 0)
-    {
-      pr_info("timeout\n");
+      msg[bytes] = MCSPI_read_reg(dev->base_addr, channel_rx);
     }
-
-    //MCSPI_irq_handler(1, mcspi_data);
-
   }
+
+  if(MCSPI_wait_for_bit_set(channel_stat, MCSPI_CHSTAT_EOT_MASK, timeout) < 0)
+    return -ETIME;
 
   return 0;
 }
@@ -95,14 +98,14 @@ int MCSPI_configure(struct MCSPI *mcspi)
     MCSPI_mode_set(mcspi);
   else
   {
-    pr_alert("%s: Config: Wrong mode selected (MASTER/SLAVE)\n", DRIVER_NAME);
+    DEBUG_ALERT("%s: Config: Wrong mode selected (MASTER/SLAVE)\n", DRIVER_NAME);
     return CONFIGURE_FAIL;
   }
 
   if(mcspi->clock_div >= CLK_1   &&  mcspi->clock_div <= CLK_32768)
     MCSPI_Set_CLKD(mcspi);
   else
-    pr_alert("%s: Config: wrong clock parameter\n", DRIVER_NAME);
+    DEBUG_ALERT("%s: Config: wrong clock parameter\n", DRIVER_NAME);
 
   if((mcspi->word_length==MCSPI_CHCONF_WL_8BIT) ||
      (mcspi->word_length==MCSPI_CHCONF_WL_16BIT) ||
@@ -111,7 +114,7 @@ int MCSPI_configure(struct MCSPI *mcspi)
     MCSPI_wl_set(mcspi);
   }
   else
-    pr_alert("%s: Config: wrong wl parameter\n", DRIVER_NAME);
+    DEBUG_ALERT("%s: Config: wrong wl parameter\n", DRIVER_NAME);
 
   if(mcspi->CS_polarity == MCSPI_CS_ACTIVE_LOW || mcspi->CS_polarity == MCSPI_CS_ACTIVE_HIGH)
     MCSPI_Set_CS(mcspi);
@@ -129,24 +132,24 @@ int MCSPI_configure(struct MCSPI *mcspi)
         }
         else
         {
-          pr_alert("%s: Config: Incorrect phase\n", DRIVER_NAME);
+          DEBUG_ALERT("%s: Config: Incorrect phase\n", DRIVER_NAME);
           return CONFIGURE_FAIL;
         }
       }
       else
       {
-        pr_alert("%s: Config: Incorrect polarity\n", DRIVER_NAME);
+        DEBUG_ALERT("%s: Config: Incorrect polarity\n", DRIVER_NAME);
         return CONFIGURE_FAIL;
       }
     }
     else
     {
-      pr_alert("%s: Config: Pin direction incorrect\n", DRIVER_NAME);
+      DEBUG_ALERT("%s: Config: Pin direction incorrect\n", DRIVER_NAME);
       return CONFIGURE_FAIL;
     }
   }
   else{
-    pr_alert("%s: Config: Incorrect channel number (0-3)\n", DRIVER_NAME);
+    DEBUG_ALERT("%s: Config: Incorrect channel number (0-3)\n", DRIVER_NAME);
     return CONFIGURE_FAIL;
   }
 }

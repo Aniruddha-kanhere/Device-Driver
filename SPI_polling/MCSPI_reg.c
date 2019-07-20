@@ -1,12 +1,4 @@
 /*
-**********************************************************************
-  Copyright (C) 2019 Aniruddha Kanhere
- 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation.
-**********************************************************************
-
 * @file    MCSPI_reg.c
 * @author  Aniruddha Kanhere
 * @date    13 July 2019
@@ -48,8 +40,8 @@ inline void MCSPI_write_reg(void __iomem *base_addr,	u32 reg, u32 val)
 
 
 /*
-core function for setting the TRM value of SPI module. DO NOT directly call this.
-Call teh MCSPI_mode_set() function instead
+core function for setting the TRM value of SPI module. Directly calling this is
+not advised. Call the MCSPI_mode_set() function instead
 */
 static void __set_tx_rx(struct MCSPI *dev, u32 channel_conf)
 {
@@ -214,9 +206,9 @@ void MCSPI_mode_set(struct MCSPI *dev)
     /*
     val = MCSPI_read_reg(dev->base_addr, MCSPI_MODULCTRL);
     if( ( (val & 1<<2)>>2) == MCSPI_MODULCTRL_MASTER)
-      pr_info("MASTER_MODE\n");
+      DEBUG_NORM("MASTER_MODE\n");
     else
-     pr_info("SLAVE_MODE\n");
+     DEBUG_NORM("SLAVE_MODE\n");
      */
   }
 
@@ -327,7 +319,7 @@ void MCSPI_enable(struct MCSPI *dev, u8 enable)
             MCSPI_write_reg(dev->base_addr, MCSPI_CH3CTRL, MCSPI_CHCTRL_EN(enable));
             break;
 
-    default:  pr_alert("%s: Enable: Incorrect Channel Number\n",DRIVER_NAME);
+    default:  DEBUG_ALERT("%s: Enable: Incorrect Channel Number\n",DRIVER_NAME);
               break;
   }
 }
@@ -343,7 +335,7 @@ void MCSPI_reset(struct MCSPI *dev)
 {
   MCSPI_set_bit(dev->base_addr + MCSPI_SYSCONFIG, 0x02);
   if( MCSPI_wait_for_bit_set(dev->base_addr + MCSPI_SYSSTATUS, 0x01, 100) <0 )
-    pr_alert("%s: Reset: timout\n", DRIVER_NAME);
+    DEBUG_ALERT("%s: Reset: timout\n", DRIVER_NAME);
 }
 
 
@@ -377,7 +369,7 @@ void MCSPI_Set_CS(struct MCSPI *dev)
 	val = MCSPI_read_reg(dev->base_addr, MCSPI_MODULCTRL);
 	if (dev->CS_sensitive == MCSPI_CS_SENSITIVE_ENABLED)
 		val &= ~MCSPI_MODULCTRL_PIN34(1);
-	else
+	else if(dev->CS_sensitive == MCSPI_CS_SENSITIVE_DISABLED)
 		val |= MCSPI_MODULCTRL_PIN34(1);
 	MCSPI_write_reg(dev->base_addr, MCSPI_MODULCTRL, val);
 }
@@ -444,32 +436,32 @@ irq_handler_t MCSPI_irq_handler(unsigned int irq, void *dev_id)
     case 0:  val = MCSPI_read_reg(mcspi->base_addr, MCSPI_CH0STAT);
              if(val & MCSPI_CHSTAT_EOT_MASK)
              {
-               pr_info("%s: IRQ: ch 0 EOT set\n", DRIVER_NAME);
+               DEBUG_NORM("%s: IRQ: ch 0 EOT set\n", DRIVER_NAME);
              }
              break;
 
     case 1:  val = MCSPI_read_reg(mcspi->base_addr, MCSPI_CH1STAT);
              if(val & MCSPI_CHSTAT_EOT_MASK)
              {
-               pr_info("%s: IRQ: ch 1 EOT set\n", DRIVER_NAME);
+               DEBUG_NORM("%s: IRQ: ch 1 EOT set\n", DRIVER_NAME);
              }
              break;
 
     case 2:  val = MCSPI_read_reg(mcspi->base_addr, MCSPI_CH2STAT);
              if(val & MCSPI_CHSTAT_EOT_MASK)
              {
-               pr_info("%s: IRQ: ch 2 EOT set\n", DRIVER_NAME);
+               DEBUG_NORM("%s: IRQ: ch 2 EOT set\n", DRIVER_NAME);
              }
              break;
 
     case 3:  val = MCSPI_read_reg(mcspi->base_addr, MCSPI_CH3STAT);
              if(val & MCSPI_CHSTAT_EOT_MASK)
              {
-               pr_info("%s: IRQ: ch 3 EOT set\n", DRIVER_NAME);
+               DEBUG_NORM("%s: IRQ: ch 3 EOT set\n", DRIVER_NAME);
              }
              break;
 
-    default: pr_alert("%s: IRQ: incorrect channel number\n", DRIVER_NAME);
+    default: DEBUG_ALERT("%s: IRQ: incorrect channel number\n", DRIVER_NAME);
              break;
   }
 

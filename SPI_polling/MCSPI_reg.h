@@ -1,12 +1,4 @@
 /*
-**********************************************************************
-  Copyright (C) 2019 Aniruddha Kanhere
- 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation.
-**********************************************************************
-
 * @file    MCSPI_reg.h
 * @author  Aniruddha Kanhere
 * @date    13 July 2019
@@ -18,6 +10,7 @@
 #ifndef __MCSPI_REG_H__
 #define __MCSPI_REG_H__
 
+#ifndef USER_SPACE
 #include <linux/init.h>
 #include <linux/module.h>
 #include <linux/kernel.h>
@@ -39,6 +32,7 @@
 #define DRIVER_NAME "MCSPI_Driver"
 
 #include <linux/platform_data/spi-omap2-mcspi.h>
+#endif
 
 //  -- MCSPI0 address space --
 #define MCSPI0_START         0x48030000
@@ -87,9 +81,9 @@
 
 //--------------------  SYSCONFIG -------------------------
 #define MCSPI_SYSCONFIG_CLOCKACTIVITY(val)		(0x03 << 8)
-#define MCSPI_SYSCONFIG_SIDLEMODE(val)		(0x03 << 3)
-#define MCSPI_SYSCONFIG_SOFTRESET(val)		BIT(1)
-#define MCSPI_SYSCONFIG_AUTOIDLE(val)		BIT(0)
+#define MCSPI_SYSCONFIG_SIDLEMODE(val)		    (0x03 << 3)
+#define MCSPI_SYSCONFIG_SOFTRESET(val)		    BIT(1)
+#define MCSPI_SYSCONFIG_AUTOIDLE(val)		      BIT(0)
 
 
 //-------------------- SYSSTATUS -------------------------
@@ -97,78 +91,78 @@
 
 
 //-------------------- MODULCTRL -------------------------
-#define MCSPI_MODULCTRL_PIN34(val)        (((u32)val) << 1)
-#define MCSPI_CS_SENSITIVE_DISABLED       0
-#define MCSPI_CS_SENSITIVE_ENABLED        1
+#define MCSPI_MODULCTRL_PIN34(val)        (val << 1)
+#define MCSPI_CS_SENSITIVE_DISABLED       0x00UL
+#define MCSPI_CS_SENSITIVE_ENABLED        0x01UL
 
-#define MCSPI_MODULCTRL_MS(val)           (((u32)val) << 2)
-#define MCSPI_MODULCTRL_MASTER            0x00
-#define MCSPI_MODULCTRL_SLAVE             0x01
+#define MCSPI_MODULCTRL_MS(val)           (val << 2)
+#define MCSPI_MODULCTRL_MASTER            0x00UL
+#define MCSPI_MODULCTRL_SLAVE             0x01UL
 
-#define MCSPI_MODULCTRL_INITDLY(val)      (((u32)val) << 4)
-#define MCSPI_MODULCTRL_INITDLY_NO_DLY    0x00
-#define MCSPI_MODULCTRL_INITDLY_4_CLK     0x01
-#define MCSPI_MODULCTRL_INITDLY_8_CLK     0x02
-#define MCSPI_MODULCTRL_INITDLY_16_CLK    0x03
-#define MCSPI_MODULCTRL_INITDLY_32_CLK    0x04
+#define MCSPI_MODULCTRL_INITDLY(val)      (val << 4)
+#define MCSPI_MODULCTRL_INITDLY_NO_DLY    0x00UL
+#define MCSPI_MODULCTRL_INITDLY_4_CLK     0x01UL
+#define MCSPI_MODULCTRL_INITDLY_8_CLK     0x02UL
+#define MCSPI_MODULCTRL_INITDLY_16_CLK    0x03UL
+#define MCSPI_MODULCTRL_INITDLY_32_CLK    0x04UL
 
-#define MCSPI_MODULCTRL_MOA(val)			    (((u32)val) << 7)
-#define MCSPI_MODULCTRL_FDAA(val)         (((u32)val) << 8)
+#define MCSPI_MODULCTRL_MOA(val)			    (val << 7)
+#define MCSPI_MODULCTRL_FDAA(val)         (val << 8)
 
 
 //---------------------- CHCTRL --------------------------
-#define MCSPI_CHCTRL_EN(val)              (((u32)val) << 0)
+#define MCSPI_CHCTRL_EN(val)              (val << 0)
 
 
 //---------------------- CHCONF --------------------------
-#define MCSPI_CHCONF_PHA(val)             ((u32)val << 0)
-#define MCSPI_CHCONF_PHA_ODD              0x00
-#define MCSPI_CHCONF_PHA_EVEN             0x01
+#define MCSPI_CHCONF_PHA(val)             (val << 0)
+#define MCSPI_CHCONF_PHA_ODD              0x00UL
+#define MCSPI_CHCONF_PHA_EVEN             0x01UL
 
-#define MCSPI_CHCONF_POL(val)             ((u32)val << 1)
-#define MCSPI_CHCONF_POL_ACTIVE_HIGH      0x00
-#define MCSPI_CHCONF_POL_ACTIVE_LOW       0x01
+#define MCSPI_CHCONF_POL(val)             (val << 1)
+#define MCSPI_CHCONF_POL_ACTIVE_HIGH      0x00UL
+#define MCSPI_CHCONF_POL_ACTIVE_LOW       0x01UL
 
-#define MCSPI_CHCONF_CLKD(val)            ((u32)val << 2)
-#define CLK_1                             0x00
-#define CLK_2                             0x01
-#define CLK_4                             0x02
-#define CLK_8                             0x03
-#define CLK_16                            0x04
-#define CLK_32                            0x05
-#define CLK_64                            0x06
-#define CLK_128                           0x07
-#define CLK_256                           0x08
-#define CLK_512                           0x09
-#define CLK_1024                          0x0A
-#define CLK_2048                          0x0B
-#define CLK_4096                          0x0C
-#define CLK_8192                          0x0D
-#define CLK_16384                         0x0E
-#define CLK_32768                         0x0F
+#define MCSPI_CHCONF_CLKD(val)            (val << 2)
+#define CLK_1                             0x00UL
+#define CLK_2                             0x01UL
+#define CLK_4                             0x02UL
+#define CLK_8                             0x03UL
+#define CLK_16                            0x04UL
+#define CLK_32                            0x05UL
+#define CLK_64                            0x06UL
+#define CLK_128                           0x07UL
+#define CLK_256                           0x08UL
+#define CLK_512                           0x09UL
+#define CLK_1024                          0x0AUL
+#define CLK_2048                          0x0BUL
+#define CLK_4096                          0x0CUL
+#define CLK_8192                          0x0DUL
+#define CLK_16384                         0x0EUL
+#define CLK_32768                         0x0FUL
 
-#define MCSPI_CHCONF_EPOL(val)            ((u32)val << 6)
-#define MCSPI_CHCONF_WL(val)				      ((u32)val << 7)
-#define MCSPI_CHCONF_WL_8BIT              0x07
-#define MCSPI_CHCONF_WL_16BIT             0x0F
-#define MCSPI_CHCONF_WL_32BIT             0x1F
+#define MCSPI_CHCONF_EPOL(val)            (val << 6)
+#define MCSPI_CHCONF_WL(val)				      (val << 7)
+#define MCSPI_CHCONF_WL_8BIT              0x07UL
+#define MCSPI_CHCONF_WL_16BIT             0x0FUL
+#define MCSPI_CHCONF_WL_32BIT             0x1FUL
 
-#define MCSPI_CHCONF_TRM(val)             (((u32)val) << 12)
-#define MCSPI_CHCONF_TRM_TX               0x02
-#define MCSPI_CHCONF_TRM_RX               0x01
-#define MCSPI_CHCONF_TRM_TX_RX            0x00
+#define MCSPI_CHCONF_TRM(val)             (val << 12)
+#define MCSPI_CHCONF_TRM_TX               0x02UL
+#define MCSPI_CHCONF_TRM_RX               0x01UL
+#define MCSPI_CHCONF_TRM_TX_RX            0x00UL
 
-#define MCSPI_CHCONF_DPE0(val)			      ((u32)val << 16)
-#define MCSPI_CHCONF_DPE1(val)			      ((u32)val << 17)
-#define MCSPI_CHCONF_IS(val)              ((u32)val << 18)
-#define MCSPI_CHCONF_FFEW(val)            ((u32)val << 27)
-#define MCSPI_CHCONF_FFER(val)            ((u32)val << 28)
+#define MCSPI_CHCONF_DPE0(val)			      (val << 16)
+#define MCSPI_CHCONF_DPE1(val)			      (val << 17)
+#define MCSPI_CHCONF_IS(val)              (val << 18)
+#define MCSPI_CHCONF_FFEW(val)            (val << 27)
+#define MCSPI_CHCONF_FFER(val)            (val << 28)
 
-#define MCSPI_D0_IN_D1_OUT                0
-#define MCSPI_D1_IN_D0_OUT                1
+#define MCSPI_D0_IN_D1_OUT                0x00UL
+#define MCSPI_D1_IN_D0_OUT                0x01UL
 
-#define MCSPI_CS_ACTIVE_LOW               0
-#define MCSPI_CS_ACTIVE_HIGH              1
+#define MCSPI_CS_ACTIVE_LOW               0x00UL
+#define MCSPI_CS_ACTIVE_HIGH              0x01UL
 
 //---------------------- CHSTAT ----------------------
 #define MCSPI_CHSTAT_RXS_MASK             BIT(0)
@@ -192,10 +186,11 @@
 
 
 //--------------------- XFERLEVEL ----------------------
-#define MCSPI_XFER_AFL                    (0x7 << 8)
-#define MCSPI_XFER_AEL                    (0x7)
+#define MCSPI_XFER_AFL                    (0x07UL << 8)
+#define MCSPI_XFER_AEL                    (0x07UL)
 #define MCSPI_XFER_WCNT                   (0xFFFF << 16)
 
+#ifndef USER_SPACE
 struct MCSPI{
   void __iomem *base_addr;
   int  channel_number;                //can be 0,1,2 or 3
@@ -309,5 +304,6 @@ void MCSPI_reset_bit(void __iomem *addr, u32 bit);
     @return:     whether irq was handled or not
 ..............................................................................*/
 irq_handler_t MCSPI_irq_handler(unsigned int irq, void *dev_id);
+#endif //USER_SPACE
 
-#endif
+#endif //__MCSPI_REG_H__

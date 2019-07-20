@@ -1,12 +1,4 @@
  /*
- **********************************************************************
-  Copyright (C) 2019 Aniruddha Kanhere
- 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation.
-**********************************************************************
-
  * @file    MCSPI_mod.c
  * @author  Aniruddha Kanhere
  * @date    13 July 2019
@@ -28,6 +20,7 @@
 
 #include "MCSPI_reg.h"
 #include "MCSPI_misc.h"
+#include "mcspi_ioctl.h"
 
 #define  DEVICE_NAME "MCSPI"              ///< The device will appear at /dev/ebbchar using this value
 #define  CLASS_NAME  "SPI_Driver_Class"   ///< The device class -- this is a character device driver
@@ -67,7 +60,7 @@ static struct file_operations fops =
    .read           = MCSPI_read,
    .write          = MCSPI_write,
    .release        = MCSPI_release,
-   .unlocked_ioctl = MCSPI_ioctl,
+   .unlocked_ioctl = MCSPI_ioctl,        //Instead of the normal ioctl with BKL
 };
 
 
@@ -85,7 +78,7 @@ struct MCSPI mcspi = {
   .word_length    = MCSPI_CHCONF_WL_8BIT,
   .phase          = MCSPI_CHCONF_PHA_ODD,
   .polarity       = MCSPI_CHCONF_POL_ACTIVE_HIGH,
-  .clock_div      = CLK_512,
+  .clock_div      = CLK_2,
   .pin_direction  = MCSPI_D0_IN_D1_OUT,
   .CS_polarity    = MCSPI_CS_ACTIVE_LOW,
   .CS_sensitive   = MCSPI_CS_SENSITIVE_ENABLED,
@@ -110,7 +103,7 @@ int MCSPI_mux_mode_set(void)
   control_module_base = (void __iomem *)ioremap(CONTROL_MODULE_START, CONTROL_MODULE_SIZE);
   if(IS_ERR(control_module_base))
   {
-    pr_alert("%s: MUX_MODE: Cannot get access to SPI mux region. Aborting.. \n", DEVICE_NAME);
+    DEBUG_ALERT("%s: MUX_MODE: Cannot get access to SPI mux region. Aborting.. \n", DEVICE_NAME);
     return -(PTR_ERR(control_module_base));
   }
 
@@ -145,7 +138,7 @@ int clock_start_stop(bool st_sp)
   clock_base_addr = (void __iomem *)ioremap(CM_PER_START, CM_PER_SIZE);
   if(IS_ERR(clock_base_addr))
   {
-    pr_alert("%s: Open: Cannot get access to SPI clock region. Aborting.. \n", DEVICE_NAME);
+    DEBUG_ALERT("%s: Open: Cannot get access to SPI clock region. Aborting.. \n", DEVICE_NAME);
     return -(PTR_ERR(clock_base_addr));
   }
 
@@ -165,34 +158,37 @@ int clock_start_stop(bool st_sp)
 *    @return returns 0 if successful
  .............................................................................*/
 static int __init MCSPI_init(void){
-   pr_info("%s: Initializing the LKM\n", DEVICE_NAME);
+
+   DEBUG_ALERT("%s: Initializing... \n", DEVICE_NAME);
 
    // Try to dynamically allocate a major number for the device -- more difficult but worth it
    majorNumber = register_chrdev(MAJOR_NUMBER, DEVICE_NAME, &fops);
    if (majorNumber<0){
-      pr_alert("%s: failed to register a major number\n", DEVICE_NAME);
+      DEBUG_ALERT("%s: failed to register a major number\n", DEVICE_NAME);
       return majorNumber;
    }
-   pr_info("%s: Registered correctly with major number %d\n" ,DEVICE_NAME, majorNumber);
+
+   DEBUG_NORM("%s: Registered correctly with major number %d\n" ,DEVICE_NAME, majorNumber);
 
    // Register the device class
    MCSPI_Class = class_create(THIS_MODULE, CLASS_NAME);
    if (IS_ERR(MCSPI_Class)){                // Check for error and clean up if there is
       unregister_chrdev(majorNumber, DEVICE_NAME);
-      pr_alert("%s: Failed to register device class\n", DEVICE_NAME);
+      DEBUG_ALERT("%s: Failed to register device class\n", DEVICE_NAME);
       return PTR_ERR(MCSPI_Class);          // Correct way to return an error on a pointer
    }
-   pr_info("%s: device class registered correctly\n", DEVICE_NAME);
+
+   DEBUG_NORM("%s: device class registered correctly\n", DEVICE_NAME);
 
    // Register the device driver
    MCSPI_Device = device_create(MCSPI_Class, NULL, MKDEV(majorNumber, 0), NULL, DEVICE_NAME);
    if (IS_ERR(MCSPI_Device)){               // Clean up if there is an error
       class_destroy(MCSPI_Class);           // Repeated code but the alternative is goto statements
       unregister_chrdev(majorNumber, DEVICE_NAME);
-      pr_alert("%s: Failed to create the device\n", DEVICE_NAME);
+      DEBUG_ALERT("%s: Failed to create the device\n", DEVICE_NAME);
       return PTR_ERR(MCSPI_Device);
    }
-   pr_info("%s: device class created correctly\n", DEVICE_NAME); // Made it! device was initialized
+   DEBUG_NORM("%s: device class created correctly\n", DEVICE_NAME); // Made it! device was initialized
 
    mutex_init(&MCSPI_mutex);
    return 0;
@@ -209,7 +205,7 @@ static void __exit MCSPI_exit(void){
    class_unregister(MCSPI_Class);                          // unregister the device class
    class_destroy(MCSPI_Class);                             // remove the device class
    unregister_chrdev(majorNumber, DEVICE_NAME);             // unregister the major number
-   pr_info("%s: Driver unloaded\n", DEVICE_NAME);
+   DEBUG_ALERT("%s: Driver unloaded\n", DEVICE_NAME);
 }
 
 /*
@@ -269,32 +265,32 @@ static int MCSPI_open(struct inode *inodep, struct file *filep){
   res=request_mem_region(MCSPI0_START, MCSPI0_ADDR_SIZE, "MCSPI0 register space");
   if(res==NULL)
   {
-    pr_alert("%s: Open: Couldn't acquire the memory region\n", DEVICE_NAME);
+    DEBUG_ALERT("%s: Open: Couldn't acquire the memory region\n", DEVICE_NAME);
     //return -EBUSY;
   }
 
   data->device->base_addr = (void __iomem *)ioremap_nocache(MCSPI0_START, MCSPI0_ADDR_SIZE);
 
   if (IS_ERR(data->device->base_addr)){
-    pr_info("%s: Open: IO mem remap unsuccessful. Error Code: %ld \n ", DEVICE_NAME, PTR_ERR(data->device->base_addr));
+    DEBUG_NORM("%s: Open: IO mem remap unsuccessful. Error Code: %ld \n ", DEVICE_NAME, PTR_ERR(data->device->base_addr));
     return -PTR_ERR(data->device->base_addr);
   }
 
-  pr_info("%s: Open: IO mem remap successful(0x%08lx)\n ", DEVICE_NAME, (unsigned long)data->device->base_addr);
+  DEBUG_NORM("%s: Open: IO mem remap successful(0x%08lx)\n ", DEVICE_NAME, (unsigned long)data->device->base_addr);
 
   if(MCSPI_configure(data->device))
   {
-    pr_alert("%s: Open: configuration failed. (Check logs for more info)\n", DEVICE_NAME);
+    DEBUG_ALERT("%s: Open: configuration failed. (Check logs for more info)\n", DEVICE_NAME);
     return -EBUSY;
   }
 
   MCSPI_mux_mode_set();
 
   MCSPI_enable(data->device, 1);
-  pr_info("%s: Open: Device enabled\n", DEVICE_NAME);
 
-  pr_info("%s : Open: Configuration of device successful\n", DEVICE_NAME);
-
+  DEBUG_NORM("%s: Open: Device enabled\n", DEVICE_NAME);
+  DEBUG_NORM("%s: Open: Configuration of device successful\n", DEVICE_NAME);
+  DEBUG_ALERT("%s: Open: Device opened successfully\n", DEVICE_NAME);
    return nonseekable_open(inodep, filep);
 }
 
@@ -318,11 +314,11 @@ static ssize_t MCSPI_read(struct file *filep, char __user *buffer, size_t len, l
    size_of_message = 0;
 
    if (error_count==0){            // if true then have success
-      pr_info("%s: Sent %d characters to the user\n", DEVICE_NAME, size_of_message);
+      DEBUG_NORM("%s: Sent %d characters to the user\n", DEVICE_NAME, size_of_message);
       return (size_of_message=0);  // clear the position to the start and return 0
    }
    else {
-      pr_info("%s: Failed to send %d characters to the user\n", DEVICE_NAME, error_count);
+      DEBUG_ALERT("%s: Failed to send %d characters to the user\n", DEVICE_NAME, error_count);
       return -EFAULT;              // Failed -- return a bad address message (i.e. -14)
    }
 }
@@ -349,14 +345,14 @@ static ssize_t MCSPI_write(struct file *filep, const char __user *buffer, size_t
    error_count = copy_from_user(message, buffer, len);
 
    if(error_count)
-	    pr_alert("String was too long, could not copy %d cahracters\n", error_count);
+	    DEBUG_ALERT("String was too long, could not copy %d cahracters\n", error_count);
 
    if( MCSPI_send_data_poll(mcspi, message, len-error_count) < 0)
    {
-     pr_alert("%s: Write: Timeout in sending data\n", DEVICE_NAME);
+     DEBUG_ALERT("%s: Write: Timeout in sending data\n", DEVICE_NAME);
    }
 
-   pr_info("%s: Received %zu characters from the user\n", DEVICE_NAME, len);
+   DEBUG_NORM("%s: Received %zu characters from the user\n", DEVICE_NAME, len);
    return len;
 }
 
@@ -386,7 +382,7 @@ static int MCSPI_release(struct inode *inodep, struct file *filep){
    //Unlock the mutex for the next process which open()s this device
    mutex_unlock(&MCSPI_mutex);
 
-   pr_info("%s: Device successfully closed\n",  DEVICE_NAME);
+   DEBUG_ALERT("%s: Device successfully closed\n",  DEVICE_NAME);
    return 0;
 }
 
@@ -394,7 +390,191 @@ static int MCSPI_release(struct inode *inodep, struct file *filep){
 // This function is yet to be formulated
 long MCSPI_ioctl(struct file *filep, unsigned int command, unsigned long arg)
 {
-  return 0;
+  struct MCSPI_data *mcspi_data = (struct MCSPI_data *)filep->private_data;
+  struct MCSPI *mcspi = mcspi_data->device;
+
+  if (_IOC_TYPE(command) != MCSPI_MAGIC_NUMBER) return -ENOTTY;
+  if (_IOC_NR(command) > MAX_IOCTL_NUMBER) return -ENOTTY;
+
+  switch(command)
+  {
+    case MCSPI_MODE_SET :
+                         if(arg == MCSPI_MODULCTRL_MASTER  ||  arg == MCSPI_MODULCTRL_SLAVE)
+                         {
+                           mcspi->role = arg;
+                           if(MCSPI_configure(mcspi))
+                           {
+                             DEBUG_ALERT("%s: Open: configuration failed. (Check logs for more info)\n", DEVICE_NAME);
+                             return -EBUSY;
+                           }
+                           DEBUG_NORM("%s: IOCTL: MCSPI_MODE_SET: %ld\n", DEVICE_NAME, arg);
+                         }
+                         MCSPI_enable(mcspi, 1);
+                         return 0;
+                         break;
+
+
+    case MCSPI_MODE_GET:
+                         if(!access_ok(VERIFY_WRITE, (void __user *)arg, sizeof(u32)))
+                          return -EFAULT;
+                         put_user(mcspi->role, (__u32 __user *)arg);
+                         DEBUG_NORM("%s: IOCTL: MCSPI_MODE requested\n", DEVICE_NAME);
+                         break;
+
+
+    case MCSPI_POL_SET :
+                         if(arg == MCSPI_CHCONF_POL_ACTIVE_HIGH  ||
+                            arg == MCSPI_CHCONF_POL_ACTIVE_LOW)
+                         {
+                           mcspi->polarity = MCSPI_CHCONF_POL_ACTIVE_HIGH;
+                           if(MCSPI_configure(mcspi))
+                           {
+                             DEBUG_ALERT("%s: Open: configuration failed. (Check logs for more info)\n", DEVICE_NAME);
+                             return -EBUSY;
+                           }
+                           DEBUG_NORM("%s: IOCTL: MCSPI_POL_SET: %ld\n", DEVICE_NAME, arg);
+                         }
+                         MCSPI_enable(mcspi, 1);
+                         return 0;
+                         break;
+
+
+    case MCSPI_POL_GET :
+                          if(!access_ok(VERIFY_WRITE, (void __user *)arg, sizeof(u32)))
+                            return -EFAULT;
+                          put_user(mcspi->polarity, (__u32 __user *)arg);
+                          DEBUG_NORM("%s: IOCTL: MCSPI_POL requested\n", DEVICE_NAME);
+                          break;
+
+
+    case MCSPI_PHA_SET:
+                          if(arg == MCSPI_CHCONF_PHA_ODD ||
+                             arg == MCSPI_CHCONF_PHA_EVEN )
+                          {
+                            mcspi->phase = arg;
+                            if(MCSPI_configure(mcspi))
+                            {
+                              DEBUG_ALERT("%s: Open: configuration failed. (Check logs for more info)\n", DEVICE_NAME);
+                              return -EBUSY;
+                            }
+                            DEBUG_NORM("%s: IOCTL: MCSPI_PHA_SET: %ld\n", DEVICE_NAME, arg);
+                          }
+                          MCSPI_enable(mcspi, 1);
+                          return 0;
+                          break;
+
+
+    case MCSPI_PHA_GET :
+                          if(!access_ok(VERIFY_WRITE, (void __user *)arg, sizeof(u32)))
+                            return -EFAULT;
+                          put_user(mcspi->phase, (__u32 __user *)arg);
+                          DEBUG_NORM("%s: IOCTL: MCSPI_PHA requested\n", DEVICE_NAME);
+                          break;
+
+
+    case MCSPI_PIN_CONFIG_SET:
+                          if(arg == MCSPI_D0_IN_D1_OUT ||
+                             arg == MCSPI_D1_IN_D0_OUT)
+                          {
+                            mcspi->pin_direction = arg;
+                            if(MCSPI_configure(mcspi))
+                            {
+                              DEBUG_ALERT("%s: Open: configuration failed. (Check logs for more info)\n", DEVICE_NAME);
+                              return -EBUSY;
+                            }
+                            DEBUG_NORM("%s: IOCTL: MCSPI_PIN_DIRECTION: %ld\n", DEVICE_NAME, arg);
+                          }
+                          MCSPI_enable(mcspi, 1);
+                          return 0;
+                          break;
+
+
+    case MCSPI_PIN_CONFIG_GET:
+                          if(!access_ok(VERIFY_WRITE, (void __user *)arg, sizeof(u32)))
+                            return -EFAULT;
+                          put_user(mcspi->pin_direction, (__u32 __user *)arg);
+                          DEBUG_NORM("%s: IOCTL: MCSPI_PIN_DIRECTION requested\n", DEVICE_NAME);
+                          break;
+
+
+    case MCSPI_CLKD_SET:
+                          if(arg >= CLK_1  && arg <=CLK_32768)
+                          {
+                            mcspi->clock_div = arg;
+                            if(MCSPI_configure(mcspi))
+                            {
+                              DEBUG_ALERT("%s: Open: configuration failed. (Check logs for more info)\n", DEVICE_NAME);
+                              return -EBUSY;
+                            }
+                            DEBUG_NORM("%s: IOCTL: MCSPI_CLKD: %ld\n", DEVICE_NAME, arg);
+                          }
+                          MCSPI_enable(mcspi, 1);
+                          return 0;
+                          break;
+
+
+    case MCSPI_CLKD_GET:
+                          if(!access_ok(VERIFY_WRITE, (void __user *)arg, sizeof(u32)))
+                            return -EFAULT;
+                          put_user(mcspi->clock_div, (__u32 __user *)arg);
+                          DEBUG_NORM("%s: IOCTL: MCSPI_CLKD requested\n", DEVICE_NAME);
+                          break;
+
+
+    case MCSPI_CS_SET :
+                          if(arg == MCSPI_CS_SENSITIVE_DISABLED ||
+                             arg == MCSPI_CS_SENSITIVE_ENABLED)
+                          {
+                             mcspi->CS_sensitive = arg;
+                             if(MCSPI_configure(mcspi))
+                             {
+                               DEBUG_ALERT("%s: Open: configuration failed. (Check logs for more info)\n", DEVICE_NAME);
+                               return -EBUSY;
+                             }
+                             DEBUG_NORM("%s: IOCTL: MCSPI_CS: %ld\n", DEVICE_NAME, arg);
+                          }
+                          MCSPI_enable(mcspi, 1);
+                          return 0;
+                          break;
+
+
+    case MCSPI_CS_GET:
+                          if(!access_ok(VERIFY_WRITE, (void __user *)arg, sizeof(u32)))
+                            return -EFAULT;
+                          put_user(mcspi->CS_sensitive, (__u32 __user *)arg);
+                          DEBUG_NORM("%s: IOCTL: MCSPI_CS_SENSITIVE requested\n", DEVICE_NAME);
+                          break;
+
+
+    case MCSPI_TRM_SET :
+                          if(arg == MCSPI_TRM_TX || arg == MCSPI_TRM_RX || arg == MCSPI_TRM_TX_RX)
+                          {
+                             mcspi->tx_rx = arg;
+                             if(MCSPI_configure(mcspi))
+                             {
+                               DEBUG_ALERT("%s: Open: configuration failed. (Check logs for more info)\n", DEVICE_NAME);
+                               return -EBUSY;
+                             }
+                             DEBUG_NORM("%s: IOCTL: MCSPI_TX_RX: %ld\n", DEVICE_NAME, arg);
+                          }
+                          MCSPI_enable(mcspi, 1);
+                          return 0;
+                          break;
+
+
+    case MCSPI_TRM_GET  :
+                          if(!access_ok(VERIFY_WRITE, (void __user *)arg, sizeof(u32)))
+                            return -EFAULT;
+                          put_user(mcspi->tx_rx, (__u32 __user *)arg);
+                          DEBUG_NORM("%s: IOCTL: MCSPI_TX_RX requested\n", DEVICE_NAME);
+                          break;
+
+    default: return -ENOTTY;
+  }
+
+  //access_ok (error then -EFAULT) to check with __put_user or __get_user  ot just pu_user or get_user instead of copy_from_user
+  // since we are using predefined sizes of data to be transfered from/to user space
+  return 0;//-ENOTTY;   //according to the POSIX standard instead of -EINVAL
 }
 
 /*..............................................................................

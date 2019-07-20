@@ -1,12 +1,4 @@
 /*
-**********************************************************************
-  Copyright (C) 2019 Aniruddha Kanhere
- 
-  This program is free software; you can redistribute it and/or modify
-  it under the terms of the GNU General Public License as published by
-  the Free Software Foundation.
-**********************************************************************
-
 * @file    MCSPI_misc.h
 * @author  Aniruddha Kanhere
 * @date    13 July 2019
@@ -34,9 +26,35 @@
 #define CONFIGURE_FAIL            1
 #define MAX_BUFFER_LENGTH         50
 
+#define TRUE                      1
+#define FALSE                     0
+
+#define DEBUG_PRINT               FALSE
+
+#if (DEBUG_PRINT)
+
+#define DEBUG_INFO(str, ...)                        \
+       printk(KERN_INFO ""str"", ##__VA_ARGS__);
+
+#define DEBUG_NORM(str, ...)                        \
+       printk(KERN_DEBUG ""str"", ##__VA_ARGS__);
+
+#else  //DEBUG_PRINT
+
+#define DEBUG_INFO(str, ...)                       ;
+#define DEBUG_NORM(str, ...)                       ;
+
+#endif  //DEBUG_PRINT
+
+#define DEBUG_ALERT(str, ...)                       \
+       printk(KERN_ALERT ""str"", ##__VA_ARGS__);
+
+
 struct MCSPI_msg{
   char *msg;
   int buffer_length;
+  spinlock_t msg_spinlock;
+  struct mutex msg_mutex;
 };
 
 struct MCSPI_data {
@@ -52,7 +70,6 @@ struct MCSPI_data {
     @return:     CONFIGURE_SUCCESS/CONFIGURE_FAIL
 ..............................................................................*/
 int MCSPI_configure(struct MCSPI *mcspi);
-
 
 int MCSPI_send_data_poll(struct MCSPI *dev, char* msg, int len);
 
