@@ -50,6 +50,7 @@
        printk(KERN_ALERT ""str"", ##__VA_ARGS__);
 
 
+
 struct MCSPI_msg{
   char *msg;
   int buffer_length;
