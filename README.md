@@ -1,2 +1,2 @@
 # Device-Driver
-This repo contains the Device drivers for linux (Specifically for Beaglebone Black dev board)
+SPI Device driver for linux (Specifically for Beaglebone Black dev board)
