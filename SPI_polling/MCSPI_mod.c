@@ -3,7 +3,7 @@
  * @author  Aniruddha Kanhere
  * @date    13 July 2019
  * @version 1
- * @brief   An introductory SPI character driver to learn LKMs and their interface with the userspace
+ * @brief   SPI character driver to for MCSPI module
  */
 
 #include <linux/init.h>           // Macros used to mark up functions e.g. __init __exit
