@@ -29,7 +29,6 @@
 #define MAX_IOCTL_NUMBER         15
 
 
-
  /*
  *   One can use the below defined macros for ioctl command arguments (the arg
  *   value). These are defined in the header file MCSPI_reg.h.
