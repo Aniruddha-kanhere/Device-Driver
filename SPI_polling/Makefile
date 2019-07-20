@@ -9,7 +9,7 @@
 DEPS = MCSPI_reg.h MCSPI_misc.h control_module.h mcspi_ioctl.h cm_per.h
 TESTOBJ = testSPI
 
-.PHONY: clean all
+.PHONY: clean all 
 
 %.o: %.c $(DEPS)
 	$(CC) -o $@ $^
