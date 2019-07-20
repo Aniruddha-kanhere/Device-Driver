@@ -1,3 +1,6 @@
+#SPI_polling
+Sending data over SPI using polling. One byte at a time...
+
 **********************************************************************
   Copyright (C) 2019 Aniruddha Kanhere
  
