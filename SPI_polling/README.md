@@ -2,7 +2,7 @@
 Sending data over SPI using polling. _One byte at a time..._
 
 *************************************************************************
-  **Copyright (C) 2019 Aniruddha Kanhere**
+  #### **Copyright (C) 2019 Aniruddha Kanhere**
  
   **This program is free software; you can redistribute it and/or modify**
   
