@@ -1,4 +1,4 @@
-#SPI_polling
+# **SPI_polling**
 Sending data over SPI using polling. One byte at a time...
 
 **********************************************************************
