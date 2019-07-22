@@ -26,8 +26,13 @@
 #define CONFIGURE_FAIL            1
 #define MAX_BUFFER_LENGTH         50
 
+#ifndef TRUE
 #define TRUE                      1
+#endif
+
+#ifndef FALSE
 #define FALSE                     0
+#endif
 
 #define DEBUG_PRINT               FALSE
 
@@ -41,6 +46,7 @@
 
 #else  //DEBUG_PRINT
 
+//if we don't need to debug, just define it as a nop
 #define DEBUG_INFO(str, ...)                       ;
 #define DEBUG_NORM(str, ...)                       ;
 
