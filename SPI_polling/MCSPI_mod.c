@@ -387,7 +387,14 @@ static int MCSPI_release(struct inode *inodep, struct file *filep){
 }
 
 
-// This function is yet to be formulated
+/*..............................................................................
+ *   @brief: The ioctl function used to send command to the device.
+ *   @param: filep: A pointer to a file object (defined in linux/fs.h)
+ *           command: the command being sent to the driver. (All commands are
+ *                    listed in the MCSPI_ioctl.h file
+ *           arg: the argument to be sent with the command
+ *   @return error code/return value for the command
+ .............................................................................*/
 long MCSPI_ioctl(struct file *filep, unsigned int command, unsigned long arg)
 {
   struct MCSPI_data *mcspi_data = (struct MCSPI_data *)filep->private_data;
