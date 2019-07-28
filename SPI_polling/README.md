@@ -17,4 +17,4 @@ The ioctl commands are defined in the [MCSPI_ioctl.h](https://github.com/Anirudd
 
 Also (in near) future, I will be uploading the Interrupt driven versions of the SPI device driver (in another directory within the same repo).
 
-If you just want to transmit some message with the given (default) configuration, just type `make` in the terminal window after traversing to the directory of this project. If all goes well, you'll have an executable file called testSPI (*Huzzah!!*). Once you have that, just do `sudo insmod SPI.ko` and then just execute the file using `./testSPI` and follow the commands.
+If you just want to transmit some message with the given (default) configuration, first go into superuser mode using `sudo su`. You will be asked for your password. Enter it. Now the prompt will change from what it was before. Now, just type `make` in the terminal window after traversing to the directory of this project. If all goes well, you'll have an executable file called testSPI (*Huzzah!!*). Once you have that, just do `sudo insmod SPI.ko` and then just execute the file using `./testSPI` and follow the commands.
