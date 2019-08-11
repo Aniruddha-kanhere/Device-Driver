@@ -36,10 +36,10 @@
 
 
 //FIX ME: Don't actually need this. Was using this as test
-#define Offset_define(str)			 	                       \
-volatile unsigned long str##_REVISION		= 0x0	;          \
-volatile unsigned long str##_SSYCONFIG		= 0x10	;      \
-volatile unsigned long str##_EOI		= 0x20	;            \
+#define Offset_define(str)			 	           \
+volatile unsigned long str##_REVISION		  = 0x0	;          \
+volatile unsigned long str##_SSYCONFIG		= 0x10	;       \
+volatile unsigned long str##_EOI		          = 0x20	;            \
 volatile unsigned long str##_IRQSTATUS_RAW_0	= 0x24	;  \
 volatile unsigned long str##_IRQSTATUS_RAW_1	= 0x28	;  \
 volatile unsigned long str##_IRQSTATUS_0	= 0x2C	;      \
