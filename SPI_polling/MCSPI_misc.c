@@ -16,6 +16,14 @@ MODULE_DESCRIPTION  ("A MCSPI LKM misc files for the BBB");  ///< The descriptio
 MODULE_VERSION      ("1.0");                           ///< A version number to inform users
 
 
+/*..............................................................................
+    @breif:      Send the data using polling
+    @parameters: dev: struct defining device
+                 msg: the char* msg which you want to send
+                 len: the length of the message you'll be 
+                      sending
+    @return:     CONFIGURE_SUCCESS/CONFIGURE_FAIL
+..............................................................................*/
 int MCSPI_send_data_poll(struct MCSPI *dev, char* msg, int len)
 {
   struct MCSPI_data data_var;
