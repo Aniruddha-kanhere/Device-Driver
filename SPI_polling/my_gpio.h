@@ -35,33 +35,33 @@
 
 
 
-
-#define Offset_define(str)			 	 \
-volatile unsigned long str##_REVISION		= 0x0	;\
-volatile unsigned long str##_SSYCONFIG		= 0x10	;\
-volatile unsigned long str##_EOI		= 0x20	;\
-volatile unsigned long str##_IRQSTATUS_RAW_0	= 0x24	;\
-volatile unsigned long str##_IRQSTATUS_RAW_1	= 0x28	;\
-volatile unsigned long str##_IRQSTATUS_0	= 0x2C	;\
-volatile unsigned long str##_IRQSTATUS_1	= 0x30	;\
-volatile unsigned long str##_IRQSTATUS_SET_0	= 0x34	;\
-volatile unsigned long str##_IRQSTATUS_SET_1	= 0x38	;\
-volatile unsigned long str##_IRQSTATUS_CLR_0	= 0x3C	;\
-volatile unsigned long str##_IRQSTATUS_CLR_1	= 0x40	;\
-volatile unsigned long str##_IRQWAKEN_0		= 0x44	;\
-volatile unsigned long str##_IRQWAKEN_1		= 0x48	;\
-volatile unsigned long str##_SSYSTATUS		= 0x114	;\
-volatile unsigned long str##_CTRL		= 0x130	;\
-volatile unsigned long str##_OE			= 0x134	;\
-volatile unsigned long str##_DATAIN		= 0x138	;\
-volatile unsigned long str##_DATAOUT		= 0x13C	;\
-volatile unsigned long str##_LEVELDETECT0	= 0x140	;\
-volatile unsigned long str##_LEVELDETECT1	= 0x144	;\
-volatile unsigned long str##_RISINGDETECT	= 0x148	;\
-volatile unsigned long str##_FALLINGDETECT	= 0x14C	;\
-volatile unsigned long str##_DEBOUNCABLE	= 0x150	;\
-volatile unsigned long str##_DEBOUNCINGTIME	= 0x154	;\
-volatile unsigned long str##_CLEARDATAOUT	= 0x190	;\
+//FIX ME: Don't actually need this. Was using this as test
+#define Offset_define(str)			 	                       \
+volatile unsigned long str##_REVISION		= 0x0	;          \
+volatile unsigned long str##_SSYCONFIG		= 0x10	;      \
+volatile unsigned long str##_EOI		= 0x20	;            \
+volatile unsigned long str##_IRQSTATUS_RAW_0	= 0x24	;  \
+volatile unsigned long str##_IRQSTATUS_RAW_1	= 0x28	;  \
+volatile unsigned long str##_IRQSTATUS_0	= 0x2C	;      \
+volatile unsigned long str##_IRQSTATUS_1	= 0x30	;      \
+volatile unsigned long str##_IRQSTATUS_SET_0	= 0x34	;  \
+volatile unsigned long str##_IRQSTATUS_SET_1	= 0x38	;  \
+volatile unsigned long str##_IRQSTATUS_CLR_0	= 0x3C	;  \
+volatile unsigned long str##_IRQSTATUS_CLR_1	= 0x40	;  \
+volatile unsigned long str##_IRQWAKEN_0		= 0x44	;      \
+volatile unsigned long str##_IRQWAKEN_1		= 0x48	;      \
+volatile unsigned long str##_SSYSTATUS		= 0x114	;      \
+volatile unsigned long str##_CTRL		= 0x130	;            \
+volatile unsigned long str##_OE			= 0x134	;            \
+volatile unsigned long str##_DATAIN		= 0x138	;          \
+volatile unsigned long str##_DATAOUT		= 0x13C	;        \
+volatile unsigned long str##_LEVELDETECT0	= 0x140	;      \
+volatile unsigned long str##_LEVELDETECT1	= 0x144	;      \
+volatile unsigned long str##_RISINGDETECT	= 0x148	;      \
+volatile unsigned long str##_FALLINGDETECT	= 0x14C	;    \
+volatile unsigned long str##_DEBOUNCABLE	= 0x150	;      \
+volatile unsigned long str##_DEBOUNCINGTIME	= 0x154	;    \
+volatile unsigned long str##_CLEARDATAOUT	= 0x190	;      \
 volatile unsigned long str##_SETDATAOUT		= 0x194;
 
 
